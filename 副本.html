@@ -1,0 +1,337 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>是男人就坚持60s</title>
+  <style>
+    body {
+      margin: 0;
+      background: #d0f0ff;
+      font-family: sans-serif;
+      overflow: hidden;
+    }
+
+    #gameContainer {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    #tunnel {
+      position: absolute;
+      top: 50px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 120px;
+      height: 230px;
+      background-image: url('photo/j.png');
+      background-size: contain;
+      background-repeat: no-repeat;
+      border-radius: 60px 60px 0 0;
+      z-index: 1;
+    }
+
+    #train {
+      position: absolute;
+      bottom: 120px;
+      left: 50%;
+      transform: translateX(-32%);
+      width: 100px;
+      height: 60px;
+      background-image: url('photo/whip.png');
+      background-size: contain;
+      background-repeat: no-repeat;
+      z-index: 0;
+      cursor: pointer;
+    }
+
+    #moveBtn {
+      position: absolute;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 10px 30px;
+      font-size: 18px;
+      background-color: #ff7f50;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    #progressBox {
+      position: absolute;
+      top: 120px;
+      right: 30px;
+      width: 40px;
+      height: 300px;
+      background: #eee;
+      border: 2px solid #aaa;
+      border-radius: 5px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      padding-top: 10px;
+    }
+
+    #progressLabel {
+      writing-mode: vertical-rl;
+      margin-bottom: 5px;
+      font-weight: bold;
+      color: #0c0c0c;
+    }
+
+    #progressFill {
+      width: 100%;
+      background-color: #4caf50;
+      height: 0%;
+      border-radius: 0 0 5px 5px;
+    }
+
+    #winMessage {
+      position: absolute;
+      top: 180px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 22px;
+      font-weight: bold;
+      display: none;
+      background-color: #fff8dc;
+      padding: 10px 20px;
+      border: 2px solid #ccc;
+      border-radius: 8px;
+      text-align: center;
+      max-width: 80vw;
+      z-index: 2;
+    }
+
+    #restartBtn {
+      position: absolute;
+      top: 250px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: none;
+      padding: 8px 20px;
+      font-size: 18px;
+      background-color: #2196f3;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      z-index: 99;
+    }
+
+    #timerDisplay {
+      position: absolute;
+      top: 20px;
+      left: 30px;
+      font-size: 20px;
+      font-weight: bold;
+      color: #333;
+    }
+
+    /* 添加样式 */
+
+    #overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.6);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+
+    #infoBox {
+      background: white;
+      border-radius: 10px;
+      padding: 20px 30px;
+      max-width: 320px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      position: relative;
+      text-align: center;
+      font-size: 16px;
+      line-height: 1.4;
+    }
+
+    #closeInfoBtn {
+      position: absolute;
+      top: 8px;
+      right: 10px;
+      border: none;
+      background: none;
+      font-size: 22px;
+      cursor: pointer;
+    }
+
+
+  </style>
+</head>
+<body>
+
+  <div id="overlay">
+  <div id="infoBox">
+    <button id="closeInfoBtn">❌</button>
+    <h2>游戏说明</h2>
+    <p>🎮 点击坤坤开始游戏。<br/>
+       🔥 点击“加速前进”按钮让坤坤加速。<br/>
+       🐢 不点击时火坤坤会后退。<br/>
+       🏁 坤坤到达最里面即结束，分数取决于用时。<br/>
+       ⚠️ 坤坤拔出则游戏结束。<br/>
+       ⏳ 坚持时间越长分数越高，达到60s算成功。</p>
+  </div>
+  </div>
+
+  <div id="gameContainer">
+    <div id="tunnel"></div>
+    <div id="train"></div>
+    <button id="moveBtn">🚂 加速前进</button>
+    <div id="progressBox">
+      <div id="progressLabel">深度</div>
+      <div id="progressFill"></div>
+    </div>
+    <div id="timerDisplay">用时：0.0 秒</div>
+    <div id="winMessage"></div>
+    <button id="restartBtn">🔁 重开</button>
+  </div>
+
+  <script>
+    const train = document.getElementById('train');
+    const moveBtn = document.getElementById('moveBtn');
+    const progressFill = document.getElementById('progressFill');
+    const winMessage = document.getElementById('winMessage');
+    const restartBtn = document.getElementById('restartBtn');
+    const timerDisplay = document.getElementById('timerDisplay');
+
+    let trainY = 0;
+    let speed = 0;
+    const maxDistance = 600;
+    let accelerating = false;
+    let gameWon = false;
+    let gameStarted = false;
+    let startTime = 0;
+    let clickedTrain = false;
+    let score = 0;
+    let duration = 0;
+    let hasMoved = false; // 新增，表示火车是否曾移动过
+
+    function updateTimer() {
+      if (gameStarted && !gameWon) {
+        duration = (performance.now() - startTime) / 1000;
+        timerDisplay.textContent = `用时：${duration.toFixed(1)} 秒`;
+        requestAnimationFrame(updateTimer);
+      }
+    }
+
+    moveBtn.addEventListener('mousedown', () => accelerating = true);
+    moveBtn.addEventListener('mouseup', () => accelerating = false);
+    moveBtn.addEventListener('mouseleave', () => accelerating = false);
+    moveBtn.addEventListener('touchstart', e => { e.preventDefault(); accelerating = true; });
+    moveBtn.addEventListener('touchend', () => accelerating = false);
+
+    train.addEventListener('click', () => {
+      if (!gameStarted) {
+        clickedTrain = true;
+        gameStarted = true;
+        startTime = performance.now();
+        updateTimer();
+      }
+    });
+
+    function endGame(success) {
+      gameWon = true;
+      restartBtn.style.display = 'block';
+
+      if (clickedTrain) {
+        duration = (performance.now() - startTime) / 1000;
+        score = Math.min(100, Math.floor(duration * 2));
+      } else {
+        score = 0;
+      }
+
+      if (success && score >= 60) {
+        winMessage.textContent = `🎉 成功！分数：${score}（用时 ${duration.toFixed(1)} 秒）`;
+      } else if (success && score < 60) {
+        winMessage.textContent = `😕 插到头了（${score}），失败（用时 ${duration.toFixed(1)} 秒）`;
+      } else {
+        winMessage.textContent = `💥 坤坤拔出，失败（分数：${score}，用时 ${duration.toFixed(1)} 秒）`;
+      }
+
+      winMessage.style.display = 'block';
+    }
+
+    function animate() {
+      if (gameWon) return;
+
+      if (!gameStarted) {
+        requestAnimationFrame(animate);
+        return;
+      }
+
+      if (accelerating) {
+        speed += 0.3;
+        if (speed > 4) speed = 4;
+      } else {
+        speed -= 0.2;
+        if (speed < -1.5) speed = -1.5;
+      }
+
+      trainY += speed;
+
+      if (trainY > maxDistance) trainY = maxDistance;
+      if (trainY < 0) trainY = 0;
+
+      // 只要火车移动过（位置 > 0），标记为已移动
+      if (trainY > 500) hasMoved = true;
+
+      // 只有火车已移动且回到起点时才失败
+      if (clickedTrain && hasMoved && trainY <= 500) {
+        endGame(false);
+        return;
+      }
+
+      if (trainY >= maxDistance) {
+        endGame(true);
+        return;
+      }
+
+      train.style.bottom = (80 + trainY) + 'px';
+      const progressPercent = (trainY / maxDistance) * 100;
+      progressFill.style.height = progressPercent + '%';
+
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+
+    restartBtn.addEventListener('click', () => {
+      trainY = 0;
+      speed = 0;
+      gameWon = false;
+      gameStarted = false;
+      clickedTrain = false;
+      score = 0;
+      duration = 0;
+      hasMoved = false;
+      winMessage.style.display = 'none';
+      restartBtn.style.display = 'none';
+      train.style.bottom = '150px';
+      progressFill.style.height = '0%';
+      timerDisplay.textContent = '用时：0.0 秒';
+      requestAnimationFrame(animate);
+    });
+
+    // JS部分，放到<script>里最前面或者window.onload里
+    const overlay = document.getElementById('overlay');
+    const closeInfoBtn = document.getElementById('closeInfoBtn');
+
+    closeInfoBtn.addEventListener('click', () => {
+      overlay.style.display = 'none';
+    });
+
+  </script>
+</body>
+</html>
