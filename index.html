@@ -2,13 +2,16 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <title>我的第一个网页</title>
+  <title>魔法网页</title>
   <style>
     body {
       font-family: Arial, sans-serif;
       background-color: #f5f5f5;
       text-align: center;
       padding: 50px;
+
+      /* 设置自定义鼠标样式 */
+      cursor: url('magic-wand.png'), auto;
     }
 
     h1 {
@@ -32,13 +35,13 @@
 </head>
 <body>
 
-  <h1>你好，世界！</h1>
-  <p>这是我写的第一个网页66。</p>
-  <button onclick="sayHello()">点击我</button>
+  <h1>✨ 魔法网页 ✨</h1>
+  <p>现在你的鼠标变成了魔法棒！</p>
+  <button onclick="sayHello()">点我施法</button>
 
   <script>
     function sayHello() {
-      alert("你好，欢迎访问我的网页！");
+      alert("🎉 你释放了魔法！");
     }
   </script>
 
