@@ -232,20 +232,14 @@
     moveBtn.addEventListener('touchstart', e => { e.preventDefault(); accelerating = true; });
     moveBtn.addEventListener('touchend', () => accelerating = false);
 
-    #train.addEventListener('click', () => {
+    train.addEventListener('click', () => {
       if (!gameStarted) {
         clickedTrain = true;
         gameStarted = true;
         startTime = performance.now();
         updateTimer();
       }
-    });#
-
-     if (trainY >= 200 && !gameStarted) {
-    gameStarted = true;
-    startTime = performance.now();
-    updateTimer();
-  }
+    });
 
     function endGame(success) {
       gameWon = true;
