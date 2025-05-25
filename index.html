@@ -285,10 +285,10 @@
       if (trainY < 0) trainY = 0;
 
       // 只要火车移动过（位置 > 0），标记为已移动
-      if (trainY > 200) hasMoved = true;
+      if (trainY > 500) hasMoved = true;
 
       // 只有火车已移动且回到起点时才失败
-      if (clickedTrain && hasMoved && trainY <= 200) {
+      if (clickedTrain && hasMoved && trainY <= 500) {
         endGame(false);
         return;
       }
