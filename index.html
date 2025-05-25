@@ -25,24 +25,24 @@
       left: 50%;
       transform: translateX(-50%);
       width: 120px;
-      height: 100px;
-      background-color: #0c0c0c;
+      height: 230px;
+      /*/background-color: #0c0c0c;*/
       background-image: url('photo/j.png');
       border-radius: 60px 60px 0 0;
-      z-index: 2;
+      z-index: 1;
     }
 
     #train {
       position: absolute;
       bottom: 80px;
       left: 50%;
-      transform: translateX(-30%);
+      transform: translateX(-18%);
       width: 100px;
       height: 60px;
-      background-image: url('https://th.bing.com/th/id/R.f7cb9ff5660daf5e70b76b1786975b15?rik=6sPU1%2bi0H84Wmg&pid=ImgRaw&r=0');
+      background-image: url('photo/whip.png');
       background-size: contain;
       background-repeat: no-repeat;
-      z-index: 1;
+      z-index: 0;
       cursor: pointer;
     }
 
@@ -103,6 +103,7 @@
       border-radius: 8px;
       text-align: center;
       max-width: 80vw;
+      z-index: 2;
     }
 
     #restartBtn {
@@ -129,9 +130,59 @@
       font-weight: bold;
       color: #333;
     }
+
+    /* 添加样式 */
+
+    #overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.6);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+
+    #infoBox {
+      background: white;
+      border-radius: 10px;
+      padding: 20px 30px;
+      max-width: 320px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      position: relative;
+      text-align: center;
+      font-size: 16px;
+      line-height: 1.4;
+    }
+
+    #closeInfoBtn {
+      position: absolute;
+      top: 8px;
+      right: 10px;
+      border: none;
+      background: none;
+      font-size: 22px;
+      cursor: pointer;
+    }
+
+
   </style>
 </head>
 <body>
+
+  <div id="overlay">
+  <div id="infoBox">
+    <button id="closeInfoBtn">❌</button>
+    <h2>游戏说明</h2>
+    <p>🎮 点击小火车开始游戏。<br/>
+       🔥 点击“加速前进”按钮让火车加速。<br/>
+       🐢 不点击时火车会慢慢后退。<br/>
+       🏁 火车到达终点即可获胜，分数取决于用时。<br/>
+       ⚠️ 火车回到起点且已经移动过则游戏失败。<br/>
+       ⏳ 用时越长分数越高，达到60分算成功。</p>
+  </div>
+  </div>
+
   <div id="gameContainer">
     <div id="tunnel"></div>
     <div id="train"></div>
@@ -270,6 +321,15 @@
       timerDisplay.textContent = '用时：0.0 秒';
       requestAnimationFrame(animate);
     });
+
+    // JS部分，放到<script>里最前面或者window.onload里
+    const overlay = document.getElementById('overlay');
+    const closeInfoBtn = document.getElementById('closeInfoBtn');
+
+    closeInfoBtn.addEventListener('click', () => {
+      overlay.style.display = 'none';
+    });
+
   </script>
 </body>
 </html>
