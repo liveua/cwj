@@ -208,7 +208,7 @@
 
     let trainY = 0;
     let speed = 0;
-    const maxDistance = 650;
+    const maxDistance = 600;
     let accelerating = false;
     let gameWon = false;
     let gameStarted = false;
@@ -255,7 +255,7 @@
       if (success && score >= 60) {
         winMessage.textContent = `🎉 成功！分数：${score}（用时 ${duration.toFixed(1)} 秒）`;
       } else if (success && score < 60) {
-        winMessage.textContent = `😕 到达但分数太低（${score}），失败（用时 ${duration.toFixed(1)} 秒）`;
+        winMessage.textContent = `😕 插到头了（${score}），失败（用时 ${duration.toFixed(1)} 秒）`;
       } else {
         winMessage.textContent = `💥 坤坤拔出，失败（分数：${score}，用时 ${duration.toFixed(1)} 秒）`;
       }
