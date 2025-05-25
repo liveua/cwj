@@ -288,7 +288,7 @@
       if (trainY > 0) hasMoved = true;
 
       // 只有火车已移动且回到起点时才失败
-      if (clickedTrain && hasMoved && trainY <= 0) {
+      if (clickedTrain && hasMoved && trainY <= 100) {
         endGame(false);
         return;
       }
