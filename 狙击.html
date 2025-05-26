@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>狙击小日本</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background-image: url('https://img.freepik.com/free-photo/forest-background_1417-18.jpg');
+            background-size: cover;
+            background-position: center;
+        }
+        
+        #score-display {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 24px;
+            color: white;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+        
+        #timer-display {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 24px;
+            color: white;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+        
+        .cover {
+            position: absolute;
+            width: 80px;
+            height: 60px;
+            background-image: url('https://cdn-icons-png.flaticon.com/512/1533/1533347.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            z-index: 1;
+        }
+        
+        .enemy {
+            position: absolute;
+            width: 50px;
+            height: 80px;
+            background-image: url('https://cdn-icons-png.flaticon.com/512/1533/1533391.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            z-index: 2;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .enemy:hover {
+            transform: scale(1.1);
+        }
+        
+        #game-over {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            z-index: 10;
+        }
+        
+        #game-over h1 {
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+        
+        #final-score {
+            font-size: 24px;
+            margin-bottom: 30px;
+        }
+        
+        #high-scores {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        #restart-btn {
+            padding: 10px 20px;
+            font-size: 18px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        #restart-btn:hover {
+            background-color: #45a049;
+        }
+        
+        #crosshair {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            pointer-events: none;
+            z-index: 100;
+            background-image: url('https://cdn-icons-png.flaticon.com/512/1533/1533360.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            transform: translate(-50%, -50%);
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="score-display">分数: 0</div>
+        <div id="timer-display">时间: 60</div>
+        <div id="crosshair"></div>
+        
+        <div id="game-over">
+            <h1>游戏结束</h1>
+            <div id="final-score">你的分数: 0</div>
+            <div id="high-scores">
+                <h2>最高分记录</h2>
+                <ol id="high-scores-list"></ol>
+            </div>
+            <button id="restart-btn">再来一局</button>
+        </div>
+    </div>
+
+    <script>
+        // 游戏变量
+        let score = 0;
+        let timeLeft = 60;
+        let gameActive = true;
+        let covers = [];
+        let currentEnemy = null;
+        let enemyTimer = null;
+        let gameTimer = null;
+        
+        // DOM元素
+        const gameContainer = document.getElementById('game-container');
+        const scoreDisplay = document.getElementById('score-display');
+        const timerDisplay = document.getElementById('timer-display');
+        const gameOverScreen = document.getElementById('game-over');
+        const finalScoreDisplay = document.getElementById('final-score');
+        const highScoresList = document.getElementById('high-scores-list');
+        const restartBtn = document.getElementById('restart-btn');
+        const crosshair = document.getElementById('crosshair');
+        
+        // 初始化游戏
+        function initGame() {
+            score = 0;
+            timeLeft = 60;
+            gameActive = true;
+            
+            // 清除所有掩体和敌人
+            document.querySelectorAll('.cover, .enemy').forEach(el => el.remove());
+            covers = [];
+            currentEnemy = null;
+            
+            // 更新显示
+            scoreDisplay.textContent = `分数: ${score}`;
+            timerDisplay.textContent = `时间: ${timeLeft}`;
+            gameOverScreen.style.display = 'none';
+            
+            // 创建掩体
+            createCovers();
+            
+            // 开始游戏循环
+            spawnEnemy();
+            gameTimer = setInterval(updateTimer, 1000);
+        }
+        
+        // 创建掩体
+        function createCovers() {
+            const containerWidth = gameContainer.clientWidth;
+            const containerHeight = gameContainer.clientHeight;
+            
+            // 创建5-8个掩体
+            const coverCount = 5 + Math.floor(Math.random() * 4);
+            
+            for (let i = 0; i < coverCount; i++) {
+                const cover = document.createElement('div');
+                cover.className = 'cover';
+                
+                // 随机位置，确保在屏幕范围内
+                const left = 50 + Math.random() * (containerWidth - 180);
+                const top = 50 + Math.random() * (containerHeight - 160);
+                
+                cover.style.left = `${left}px`;
+                cover.style.top = `${top}px`;
+                
+                gameContainer.appendChild(cover);
+                covers.push({
+                    element: cover,
+                    x: left,
+                    y: top
+                });
+            }
+        }
+        
+        // 生成敌人
+        function spawnEnemy() {
+            if (!gameActive) return;
+            
+            // 清除现有的敌人和计时器
+            if (currentEnemy) {
+                currentEnemy.element.remove();
+                clearTimeout(enemyTimer);
+            }
+            
+            // 随机选择一个掩体
+            const coverIndex = Math.floor(Math.random() * covers.length);
+            const cover = covers[coverIndex];
+            
+            // 创建敌人
+            const enemy = document.createElement('div');
+            enemy.className = 'enemy';
+            
+            // 在掩体附近位置生成敌人
+            const enemyX = cover.x + Math.random() * 40 - 20;
+            const enemyY = cover.y - 60 + Math.random() * 20;
+            
+            enemy.style.left = `${enemyX}px`;
+            enemy.style.top = `${enemyY}px`;
+            
+            // 点击敌人事件
+            enemy.addEventListener('click', () => {
+                if (gameActive) {
+                    score++;
+                    scoreDisplay.textContent = `分数: ${score}`;
+                    enemy.remove();
+                    currentEnemy = null;
+                    spawnEnemy();
+                }
+            });
+            
+            gameContainer.appendChild(enemy);
+            currentEnemy = {
+                element: enemy,
+                x: enemyX,
+                y: enemyY
+            };
+            
+            // 敌人会在2-4秒后消失
+            const hideTime = 2000 + Math.random() * 2000;
+            enemyTimer = setTimeout(() => {
+                if (currentEnemy && currentEnemy.element === enemy) {
+                    enemy.remove();
+                    currentEnemy = null;
+                    spawnEnemy();
+                }
+            }, hideTime);
+        }
+        
+        // 更新计时器
+        function updateTimer() {
+            timeLeft--;
+            timerDisplay.textContent = `时间: ${timeLeft}`;
+            
+            if (timeLeft <= 0) {
+                endGame();
+            }
+        }
+        
+        // 结束游戏
+        function endGame() {
+            gameActive = false;
+            clearInterval(gameTimer);
+            clearTimeout(enemyTimer);
+            
+            if (currentEnemy) {
+                currentEnemy.element.remove();
+                currentEnemy = null;
+            }
+            
+            // 显示游戏结束界面
+            finalScoreDisplay.textContent = `你的分数: ${score}`;
+            updateHighScores(score);
+            gameOverScreen.style.display = 'flex';
+        }
+        
+        // 更新最高分记录
+        function updateHighScores(newScore) {
+            // 从本地存储获取最高分
+            let highScores = JSON.parse(localStorage.getItem('sniperHighScores')) || [];
+            
+            // 添加新分数
+            highScores.push(newScore);
+            
+            // 排序并保留前10
+            highScores.sort((a, b) => b - a);
+            highScores = highScores.slice(0, 10);
+            
+            // 保存回本地存储
+            localStorage.setItem('sniperHighScores', JSON.stringify(highScores));
+            
+            // 显示最高分
+            highScoresList.innerHTML = '';
+            highScores.forEach((score, index) => {
+                const li = document.createElement('li');
+                li.textContent = `${index + 1}. ${score}`;
+                highScoresList.appendChild(li);
+            });
+        }
+        
+        // 重新开始游戏
+        restartBtn.addEventListener('click', initGame);
+        
+        // 鼠标移动时更新准星位置
+        gameContainer.addEventListener('mousemove', (e) => {
+            crosshair.style.left = `${e.clientX}px`;
+            crosshair.style.top = `${e.clientY}px`;
+        });
+        
+        // 触摸移动时更新准星位置
+        gameContainer.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            crosshair.style.left = `${touch.clientX}px`;
+            crosshair.style.top = `${touch.clientY}px`;
+        });
+        
+        // 触摸敌人时触发点击事件
+        gameContainer.addEventListener('touchstart', (e) => {
+            if (e.target.classList.contains('enemy')) {
+                e.target.click();
+            }
+        });
+        
+        // 初始化游戏
+        initGame();
+    </script>
+</body>
+</html>
